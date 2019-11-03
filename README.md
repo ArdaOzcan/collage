@@ -7,7 +7,7 @@ This is a program that creates a whole image from tiny images in a database. A d
 #### NOTE:
 If this is your first time running, it is recommended that that you input **'y'** to the question at index 4.
 ```
- 0 Please input a database path : /meme_databse
+ 0 Please input a database path : meme_databse
  1 Input image path ( Directly write the name if it's in the current directory ) : test_images/1.jpg
  2 End result's quality? ( 1 is the best quality, bigger is worse ) ( Note that better quality will be exponentially slower to compute, recommended is 8 ): 8
  3 Image size of the result image? ( This represents a single image's single edge, input around (10-30) for decent results ) : 15
