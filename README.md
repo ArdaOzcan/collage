@@ -14,7 +14,7 @@ cd collage/collage
 ```
 
 ## Configuration:
-After you download and changed your directory, you need some libraries:
+After you downloaded and changed your directory, you need some libraries:
 ```
 pip install -r requirements.txt
 ```
