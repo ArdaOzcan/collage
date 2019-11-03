@@ -5,8 +5,19 @@ from time import time
 import os
 import math
 from datetime import timedelta
+import argparse
+from colorama import Fore, Style, init
 
-def average_to_json(meme_database_path, precision):
+def show_info(start, highligth="", end=""):
+    
+    print(Style.BRIGHT +
+          Fore.YELLOW + f"[*] {start} " +         
+          Fore.GREEN + f"{highligth} " +
+          Fore.YELLOW + f"{end}"
+          )
+
+
+def average_to_json(database_path, precision):
     
     '''
     Function Description : 
@@ -27,14 +38,14 @@ def average_to_json(meme_database_path, precision):
        
     '''
     
-    file_names = os.listdir(meme_database_path)
-    print("Creating a json file to store average colors of database...")  
+    file_names = os.listdir(database_path)
+    show_info("Creating a json file to store average colors of database")  
     start =  time()
     
     files_avg_col = []
     
     for i, file in enumerate(file_names):
-        image = get_image(meme_database_path, file, precision) 
+        image = get_image(database_path, file, precision) 
         avarage_color = np.average(image, (0, 1)).astype(int) 
         files_avg_col.append(avarage_color.tolist()[::-1])     
                
@@ -42,7 +53,7 @@ def average_to_json(meme_database_path, precision):
         json.dump(files_avg_col, json_file)   
         
     end = time()
-    print(f"Process finished in {timedelta(seconds=(round(end - start)))} seconds")     
+    show_info("Process finished in", str({timedelta(seconds=(round(end - start)))}), "seconds")     
        
 
 def new_shape(image, crop_size):
@@ -61,7 +72,7 @@ def new_shape(image, crop_size):
         -Floors the shape/crop_size and multiplies it by crop_size
             ( 
                 Example :   if the shape is 340 and crop_size is 7,
-                            340/7 ( shape/crop_size ) would be 48,57...
+                            340/7 ( shape/crop_size ) would be 48,57
                             Floor of 48,57.. is 48 
                             and 48 * 7 is 336‬                        
             )
@@ -89,7 +100,7 @@ def crop(image, crop_size):
     Function Description:
     
     * This function crops the input image into (crop_size x crop_size) squares and takes the average color of it
-    so the function 'arrange(colors, json_file, memes)' can use the returned list to find the closest color.
+    so the function 'arrange(colors, json_file, database_list)' can use the returned list to find the closest color.
     
     What it does :
 
@@ -103,7 +114,7 @@ def crop(image, crop_size):
               
     '''
     
-    print("Cropping the image into pieces...")
+    show_info("Cropping the image into pieces")
     
     image = cv2.imread(image)
     image = cv2.resize(image, tuple(new_shape(image, crop_size)[::-1]))
@@ -122,7 +133,7 @@ def crop(image, crop_size):
     return average_list
         
         
-def arrange(colors, json_file, memes):
+def arrange(colors, json_file, database_list):
     
     '''
     
@@ -180,7 +191,7 @@ def arrange(colors, json_file, memes):
                 So a less precise ( possibly a little random ) and more efficient algorithm could be used
 
     '''
-    print("Choosing best images from the database...")
+    show_info("Choosing best images from the database")
 
     
     colors = np.array(colors)
@@ -219,12 +230,12 @@ def arrange(colors, json_file, memes):
                 image_index = i
                 
         
-        file_names_list.append(memes[image_index])
+        file_names_list.append(database_list[image_index])
                 
 
     return file_names_list
      
-def generate_name(export_path):
+def generate_name(export_path, word="result"):
     
     '''
     
@@ -244,8 +255,8 @@ def generate_name(export_path):
     '''
     
     for s in range(len(os.listdir(export_path))):
-        if not os.path.isfile(os.path.join(export_path, f"result_{s}.jpg")):
-            return f"result_{s}.jpg"
+        if not os.path.isfile(os.path.join(export_path, f"{word}_{s}.jpg")):
+            return f"{word}_{s}.jpg"
             
             
 def get_image(database_path, file_name, single_image_size):
@@ -290,7 +301,7 @@ def render(single_image_size, result_image_size, database_path, file_names_list,
     '''
     
     
-    print("Rendering image...")
+    show_info("Rendering image")
     
     for i in range(result_image_size[1]):      
         horizontal = get_image(database_path, file_names_list[result_image_size[0]*i], single_image_size)  
@@ -305,7 +316,7 @@ def render(single_image_size, result_image_size, database_path, file_names_list,
             result_image = np.vstack((result_image, horizontal))   
     
     
-    print("Rendering is finished.")
+    show_info("Rendering is", "finished.")
 
     
     if choice == "s":        
@@ -318,70 +329,106 @@ def render(single_image_size, result_image_size, database_path, file_names_list,
                 file_name = file_name + ".jpg"
                 
             while os.path.isfile(os.path.join(export_path, file_name)):
-                if input("The file name you entered already exists, do you want to override? ( y/n ) : ").lower() == 'y':
+                if ("The file name you entered already exists, do you want to override? ( y/n ) : ").lower() == 'y':
                     break
-                else:                  
-                    file_name = input("Please enter a new file name : ")
-                    if not file_name.endswith(".jpg"):
-                        file_name = file_name + ".jpg"
+                else:
+                    file_name = generate_name(export_path, word=os.path.splitext(file_name)[0])
+                    
                     
             cv2.imwrite(os.path.join(export_path, file_name), result_image) 
-            print(f"Exported file to '{os.path.join(export_path, file_name)}', 2 {export_path}")
+            show_info("Exported file to '", os.path.join(export_path, file_name), "'")
             
         else:
-            cv2.imwrite(os.path.join(export_path, generate_name(export_path)), result_image) 
-            print(f"Exported file to '{os.path.join(export_path, file_name)}', 3 {export_path}")
+            file_name = generate_name(export_path)
+            cv2.imwrite(os.path.join(export_path, file_name), result_image) 
+            show_info("Exported file to '", os.path.join(export_path, file_name), "'")
 
             
         if choice == "*":
-            cv2.imshow("result", result_image)   
+            cv2.imshow(file_name, result_image)   
             cv2.waitKey(0)   
              
             
     
-        
-meme_database_path = input("Please input a database path : ")
-memes = os.listdir(meme_database_path)
-input_image_path = input("Input image path ( Directly write the name if it's in the current directory ) : ")
-
-quality_size = int(input("End result's quality? ( 1 is the best quality, bigger is worse ) ( Note that better quality will be exponentially slower to compute, recommended is 8 ): "))
-single_image_size = int(input("Image size of the result image? ( This represents a single image's single edge, input around (10-30) for decent results ) : "))
-
-result_shape = (int(new_shape(cv2.imread(input_image_path), quality_size)[1] / quality_size), 
-                int(new_shape(cv2.imread(input_image_path), quality_size)[0] / quality_size))
-
-if input("Do you want to create a new json file to store the average colors of your database? (y/n) ( Input 'y' if this is your first time running ): ").lower() == "y":
-    average_to_json(meme_database_path, int(input("How precise should the average color be? (An integer) : ")))
-
-choice = ""
-while choice != "s" and choice != "e" and choice != "*":
-    choice = input("What is your choice for the image? ('s' for only showing, 'e' for only exporting, '*' for both) : ").lower()
-
-
-
-# If the user chose 's' which stands for 'show only', these variables don't matter
-# But they need to be defined to prevent errors
-export_file_name = ""
-export_path = "_placeholder_"
-
-if choice == "e" or choice == "*" :
-    export_file_name = input("Export file's name (Press enter for auto-naming) : ")  
-    export_path = input("Export path (Press enter for current directory): ")
-    if not os.path.isdir(export_path) and export_path != "":
-        os.mkdir(export_path)
+def main():
     
-        
-
-        
+    init() 
     
-print("Process started...")
-start = time()
+    parser = argparse.ArgumentParser(description="Creates a collage of images.")
+    
+    parser.add_argument("database_path", action="store",
+                         help="Stores the image database path")
+    
+    parser.add_argument("image_path", action="store",
+                         help="Stores the input image path")
+    
+    parser.add_argument("--quality", action="store", type=int,
+                         help="Image quality (min is 1)",
+                         default=8)
+    
+    parser.add_argument("--size", action="store", type=int,
+                         help="Chunk size, 10-30 works the best",                        
+                         default=16)
+    
+    parser.add_argument("--choice", action="store",
+                         help="User choice, 's' for only showing, 'e' for only exporting, '*' for both",                        
+                         default="*")
+    
+    parser.add_argument("--file_name", action="store",
+                         help="Export file's name, (This argument only takes the name, not the whole path)",                        
+                         default="")
+    
+    parser.add_argument("--export_dir", action="store",
+                         help="Export file's directory, this is not required since the image will be exported to the current directory by default",                        
+                         default=".")
+    
+    parser.add_argument("--scan_database", action="store_true",
+                         help="Scans the database, this is required on the first run")
+    
 
-render(single_image_size, result_shape, meme_database_path, 
-                arrange(crop(input_image_path, quality_size), 
-                "avg_colors.json", memes), choice, 
-                export_file_name, export_path)
+
+    args = parser.parse_args()
+        
+    database_path = args.database_path
+    database_list = os.listdir(database_path)
+    input_image_path = args.image_path
+
+    quality_size = args.quality
+    single_image_size = args.size
+
+    result_shape = (int(new_shape(cv2.imread(input_image_path), quality_size)[1] / quality_size), 
+                    int(new_shape(cv2.imread(input_image_path), quality_size)[0] / quality_size))
+
+    if args.scan_database:
+        average_to_json(database_path, 15)
+
+    choice = args.choice
+    
 
 
-end = time()
-print(f"Whole process was finished in {timedelta(seconds=(round(end - start)))} seconds")     
+    # If the user chose 's' which stands for 'show only', these variables don't matter
+    # But they need to be defined to prevent errors
+    export_file_name = ""
+    export_path = ""
+
+    if choice == "e" or choice == "*" :
+        export_file_name = args.file_name  
+        export_path = args.export_dir
+        if not os.path.isdir(export_path) and export_path != "":
+            os.mkdir(export_path)
+                  
+        
+    show_info("Process", "started")
+    start = time()
+
+    render(single_image_size, result_shape, database_path, 
+                    arrange(crop(input_image_path, quality_size), 
+                    "avg_colors.json", database_list), choice, 
+                    export_file_name, export_path)
+
+
+    end = time()
+    show_info("Whole process was finished in", str(timedelta(seconds=(round(end - start)))), "seconds")     
+    
+if __name__ == "__main__":
+    main()    
