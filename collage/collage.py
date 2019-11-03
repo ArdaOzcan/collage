@@ -311,7 +311,7 @@ def render(single_image_size, result_image_size, database_path, file_names_list,
     if choice == "s":        
         cv2.imshow("result", result_image)    
         cv2.waitKey(0)
-    else:
+    elif choice == "*" or choice == "e":
         
         if file_name != "":
             if not file_name.endswith(".jpg"):
@@ -325,17 +325,18 @@ def render(single_image_size, result_image_size, database_path, file_names_list,
                     if not file_name.endswith(".jpg"):
                         file_name = file_name + ".jpg"
                     
-            print(f"Exported file to '{os.path.join(export_path, file_name)}'")
             cv2.imwrite(os.path.join(export_path, file_name), result_image) 
+            print(f"Exported file to '{os.path.join(export_path, file_name)}', 2 {export_path}")
             
         else:
-            print(f"Exported file to '{os.path.join(export_path, file_name)}'")
             cv2.imwrite(os.path.join(export_path, generate_name(export_path)), result_image) 
+            print(f"Exported file to '{os.path.join(export_path, file_name)}', 3 {export_path}")
+
             
         if choice == "*":
             cv2.imshow("result", result_image)   
             cv2.waitKey(0)   
-            
+             
             
     
         
@@ -352,22 +353,24 @@ result_shape = (int(new_shape(cv2.imread(input_image_path), quality_size)[1] / q
 if input("Do you want to create a new json file to store the average colors of your database? (y/n) ( Input 'y' if this is your first time running ): ").lower() == "y":
     average_to_json(meme_database_path, int(input("How precise should the average color be? (An integer) : ")))
 
-choice = input("What is your choice for the image? ('s' for only showing, 'e' for only exporting, '*' for both) : ").lower()
+choice = ""
+while choice != "s" and choice != "e" and choice != "*":
+    choice = input("What is your choice for the image? ('s' for only showing, 'e' for only exporting, '*' for both) : ").lower()
 
 
 
 # If the user chose 's' which stands for 'show only', these variables don't matter
 # But they need to be defined to prevent errors
 export_file_name = ""
-export_path = ""
+export_path = "_placeholder_"
 
 if choice == "e" or choice == "*" :
-    export_file_name = input("Export file's name (Press enter for auto-naming) : ")
-    while not os.path.isdir(export_path):
-        export_path = input("Export path (Press enter for current directory) (This has to be a valid directory): ")
-        if export_path == "":
-            export_path = "\\"
-            
+    export_file_name = input("Export file's name (Press enter for auto-naming) : ")  
+    export_path = input("Export path (Press enter for current directory): ")
+    if not os.path.isdir(export_path) and export_path != "":
+        os.mkdir(export_path)
+    
+        
 
         
     
