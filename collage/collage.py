@@ -7,6 +7,7 @@ import math
 from datetime import timedelta
 import argparse
 from colorama import Fore, Style, init
+from tqdm import tqdm
 
 def show_info(start, highligth="", end=""):
     
@@ -38,23 +39,22 @@ def average_to_json(database_path, precision):
        
     '''
     
+    
     file_names = os.listdir(database_path)
-    show_info("Creating a json file to store average colors of database")  
-    start =  time()
+    show_info("Creating a json file to store average colors of the database")  
     
     files_avg_col = []
     
-    for i, file in enumerate(file_names):
+    for i, file in zip(tqdm(range(len(file_names))), file_names):
         image = get_image(database_path, file, precision) 
         avarage_color = np.average(image, (0, 1)).astype(int) 
         files_avg_col.append(avarage_color.tolist()[::-1])     
                
-    with open("avg_colors.json", "w") as json_file:
+    json_file_name = os.path.basename(os.path.normpath(database_path))
+    with open(f"{json_file_name}.json", "w") as json_file:
         json.dump(files_avg_col, json_file)   
         
-    end = time()
-    show_info("Process finished in", str({timedelta(seconds=(round(end - start)))}), "seconds")     
-       
+    show_info("Created/modified", f"json file (.\{json_file_name}.json)", "to store average colors of the database")   
 
 def new_shape(image, crop_size):
     
@@ -120,15 +120,15 @@ def crop(image, crop_size):
     image = cv2.resize(image, tuple(new_shape(image, crop_size)[::-1]))
 
     
-    
     average_list = []   
-    for y_index in range(0, image.shape[0], crop_size):
+    for y_index in tqdm(range(0, image.shape[0], crop_size)):
         
         for x_index in range(0, image.shape[1], crop_size):
             
             cropped_image = image[y_index:y_index+crop_size, x_index:x_index+crop_size]
             current_average = np.average(cropped_image, (0, 1))[::-1]     
             average_list.append(current_average.astype(int))   
+            
             
     return average_list
         
@@ -213,7 +213,7 @@ def arrange(colors, json_file, database_list):
     
     file_names_list = []
       
-    for color in colors:
+    for _, color in zip(tqdm(range(len(colors))), colors):
         
         smallest_difference = []
         image_index = 0
@@ -303,7 +303,7 @@ def render(single_image_size, result_image_size, database_path, file_names_list,
     
     show_info("Rendering image")
     
-    for i in range(result_image_size[1]):      
+    for i in tqdm(range(result_image_size[1])):      
         horizontal = get_image(database_path, file_names_list[result_image_size[0]*i], single_image_size)  
         
         for file in file_names_list[1 + (result_image_size[0]*i):result_image_size[0]*(i+1)]:   
@@ -399,12 +399,14 @@ def main():
     result_shape = (int(new_shape(cv2.imread(input_image_path), quality_size)[1] / quality_size), 
                     int(new_shape(cv2.imread(input_image_path), quality_size)[0] / quality_size))
 
+    show_info("Process", "started")
+    start = time()
+    
     if args.scan_database:
         average_to_json(database_path, 15)
 
     choice = args.choice
     
-
 
     # If the user chose 's' which stands for 'show only', these variables don't matter
     # But they need to be defined to prevent errors
@@ -418,12 +420,12 @@ def main():
             os.mkdir(export_path)
                   
         
-    show_info("Process", "started")
-    start = time()
+    
 
+        
     render(single_image_size, result_shape, database_path, 
                     arrange(crop(input_image_path, quality_size), 
-                    "avg_colors.json", database_list), choice, 
+                    f"{os.path.basename(os.path.normpath(database_path))}.json", database_list), choice, 
                     export_file_name, export_path)
 
 
