@@ -362,27 +362,27 @@ def main():
     parser.add_argument("image_path", action="store",
                          help="Stores the input image path")
     
-    parser.add_argument("--quality", action="store", type=int,
+    parser.add_argument("--quality", "-q", action="store", type=int,
                          help="Image quality (min is 1)",
                          default=8)
     
-    parser.add_argument("--size", action="store", type=int,
+    parser.add_argument("--size", "-s", action="store", type=int,
                          help="Chunk size, 10-30 works the best",                        
                          default=16)
     
-    parser.add_argument("--choice", action="store",
+    parser.add_argument("--choice", "-c",action="store",
                          help="User choice, 's' for only showing, 'e' for only exporting, '*' for both",                        
                          default="*")
     
-    parser.add_argument("--file_name", action="store",
+    parser.add_argument("--file_name", "-f", action="store",
                          help="Export file's name, (This argument only takes the name, not the whole path)",                        
                          default="")
     
-    parser.add_argument("--export_dir", action="store",
+    parser.add_argument("--export_dir", "-d", action="store",
                          help="Export file's directory, this is not required since the image will be exported to the current directory by default",                        
                          default=".")
     
-    parser.add_argument("--scan_database", action="store_true",
+    parser.add_argument("--scan_database", "-sd", action="store_true",
                          help="Scans the database, this is required on the first run")
     
 
